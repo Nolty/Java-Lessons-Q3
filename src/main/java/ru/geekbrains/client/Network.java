@@ -12,6 +12,7 @@ public class Network {
     private Socket socket;
     private DataInputStream inputStream;
     private DataOutputStream outputStream;
+    private String currentLogin;
 
     private final ChatController controller;
 
@@ -73,6 +74,7 @@ public class Network {
 
             boolean authenticated = inputStream.readBoolean();
             if (authenticated) {
+                currentLogin = login;
                 startReadServerMessages();
             }
             return authenticated;
@@ -81,6 +83,10 @@ public class Network {
         }
 
         return false;
+    }
+
+    public String getCurrentLogin() {
+        return this.currentLogin;
     }
 
     public void closeConnection() {
