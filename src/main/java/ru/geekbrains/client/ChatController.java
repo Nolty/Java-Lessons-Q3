@@ -10,12 +10,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import ru.geekbrains.server.ServerCommandConstants;
 
-import java.io.*;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.stream.Collectors;
 
 public class ChatController implements Initializable {
     @FXML
@@ -30,8 +27,6 @@ public class ChatController implements Initializable {
     private ListView<String> clientList;
 
     private final Network network;
-
-    private File messageFile;
 
     public ChatController() {
         this.network = new Network(this);
@@ -73,54 +68,15 @@ public class ChatController implements Initializable {
             loginField.clear();
             passwordField.clear();
 
-            messageFile = new File(String.format("%s.txt", network.getCurrentLogin()));
-            if (messageFile.exists()) {
-                ReadMessagesFromFile();
-            } else {
-                try {
-                    if (messageFile.createNewFile()) {
-                        System.out.println("File created successfully");
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
+            List<String> messages = network.readMessagesFromFile();
+            for (String message : messages) {
+                if (!message.isBlank()) {
+                    displayMessage(message);
                 }
             }
 
             setAuthenticated(true);
         }
-    }
-
-    private void ReadMessagesFromFile() {
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(messageFile))) {
-            String currentLine;
-            while ((currentLine = bufferedReader.readLine()) != null) {
-                displayMessage(currentLine);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void WriteMessagesToFile() {
-        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(messageFile))) {
-            List<String> messages = getLastMessages();
-            for (String message : messages) {
-                bufferedWriter.write(message);
-                bufferedWriter.newLine();
-            }
-
-            bufferedWriter.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private List<String> getLastMessages() {
-        List<String> messages = Arrays.asList(chatArea.getText().split("\n"));
-        return messages
-                .stream()
-                .skip(Math.max(0, messages.size() - 100))
-                .collect(Collectors.toList());
     }
 
     public void sendMessage() {
@@ -141,7 +97,6 @@ public class ChatController implements Initializable {
     }
 
     public void close() {
-        WriteMessagesToFile();
         network.closeConnection();
     }
 

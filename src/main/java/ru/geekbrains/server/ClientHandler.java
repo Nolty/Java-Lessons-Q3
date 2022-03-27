@@ -5,12 +5,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-public class ClientHandler {
+public class ClientHandler implements Runnable {
     private final Server server;
     private final Socket socket;
     private final DataInputStream inputStream;
     private final DataOutputStream outputStream;
-
     private String nickName;
 
     public String getNickName() {
@@ -23,14 +22,6 @@ public class ClientHandler {
             this.socket = socket;
             this.inputStream = new DataInputStream(socket.getInputStream());
             this.outputStream = new DataOutputStream(socket.getOutputStream());
-            new Thread(() -> {
-                try {
-                    authentication();
-                    readMessages();
-                } catch (IOException exception) {
-                    exception.printStackTrace();
-                }
-            }).start();
         } catch (IOException exception) {
             throw new RuntimeException("Проблемы при создании обработчика");
         }
@@ -102,6 +93,16 @@ public class ClientHandler {
             outputStream.close();
             inputStream.close();
             socket.close();
+        } catch (IOException exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    @Override
+    public void run() {
+        try {
+            authentication();
+            readMessages();
         } catch (IOException exception) {
             exception.printStackTrace();
         }
