@@ -1,11 +1,15 @@
 package ru.geekbrains.server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
 public class ClientHandler implements Runnable {
+    static final Logger logger = LogManager.getLogger(ClientHandler.class.getName());
     private final Server server;
     private final Socket socket;
     private final DataInputStream inputStream;
@@ -58,7 +62,7 @@ public class ClientHandler implements Runnable {
     private void readMessages() throws IOException {
         while (true) {
             String messageInChat = inputStream.readUTF();
-            System.out.println("от " + nickName + ": " + messageInChat);
+            logger.info(String.format("%s отправил сообщени: %s", nickName, messageInChat));
 
             if (messageInChat.equals(ServerCommandConstants.CLIENT_EXIT)) {
                 closeConnection();
@@ -70,7 +74,7 @@ public class ClientHandler implements Runnable {
                 if (server.sendPrivateMessage(nickName, messageInfo[1], messageInfo[2])) {
                     sendMessage(String.format("[%s]: %s", nickName, messageInfo[2]));
                 } else {
-                    sendMessage("Ошибка отправки сообщения для пользователя " + messageInfo[1]);
+                    logger.info("Ошибка отправки сообщения для пользователя " + messageInfo[1]);
                 }
             } else {
                 server.broadcastMessage(String.format("%s: %s", nickName, messageInChat));
@@ -82,7 +86,7 @@ public class ClientHandler implements Runnable {
         try {
             outputStream.writeUTF(message);
         } catch (IOException exception) {
-            exception.printStackTrace();
+            logger.error(exception);
         }
     }
 
@@ -94,7 +98,9 @@ public class ClientHandler implements Runnable {
             inputStream.close();
             socket.close();
         } catch (IOException exception) {
-            exception.printStackTrace();
+            logger.error(exception);
+        } finally {
+            logger.info("Клиент отключился от сервера");
         }
     }
 
@@ -104,7 +110,7 @@ public class ClientHandler implements Runnable {
             authentication();
             readMessages();
         } catch (IOException exception) {
-            exception.printStackTrace();
+            logger.info(exception);
         }
     }
 }

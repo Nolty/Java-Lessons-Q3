@@ -12,7 +12,11 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class Server {
+    static final Logger logger = LogManager.getLogger(Server.class.getName());
     private final AuthService authService;
     private List<ClientHandler> connectedUsers;
 
@@ -20,20 +24,21 @@ public class Server {
         authService = new DbHandler();
         ExecutorService executorService = Executors.newCachedThreadPool();
         try (ServerSocket server = new ServerSocket(CommonConstants.SERVER_PORT)) {
+            logger.info("Сервер успешно запущен");
             authService.start();
             connectedUsers = new ArrayList<>();
             while (true) {
-                System.out.println("Сервер ожидает подключения");
+                logger.info("Сервер ожидает подключения");
                 Socket socket = server.accept();
-                System.out.println("Клиент подключился");
+                logger.info("Клиент подключился");
                 executorService.submit(new ClientHandler(this, socket));
             }
         } catch (IOException exception) {
-            System.out.println("Ошибка в работе сервера");
-            exception.printStackTrace();
+            logger.error("Ошибка в работе сервера", exception);
         } finally {
             authService.end();
             executorService.shutdown();
+            logger.info("Сервер завершил работу");
         }
     }
 
@@ -70,10 +75,12 @@ public class Server {
 
     public synchronized void addConnectedUser(ClientHandler handler) {
         connectedUsers.add(handler);
+        logger.info(String.format("%s вошел в чат", handler.getNickName()));
     }
 
     public synchronized void disconnectUser(ClientHandler handler) {
         connectedUsers.remove(handler);
+        logger.info(String.format("%s вышел из чата", handler.getNickName()));
     }
 
     public String getClients() {

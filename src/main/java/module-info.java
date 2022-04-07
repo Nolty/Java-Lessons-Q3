@@ -6,6 +6,7 @@ module ru.geekbrains.client {
     requires com.dlsc.formsfx;
     requires org.kordamp.bootstrapfx.core;
     requires java.sql;
+    requires org.apache.logging.log4j;
 
     opens ru.geekbrains.client to javafx.fxml;
     exports ru.geekbrains.client;
